@@ -15,7 +15,7 @@ Parameters:
     Type: String
     AllowedPattern: "[A-Za-z0-9-]+"
     Default: main
-
+    
 Resources:
   CloudBuildServiceRole:
     Type: 'AWS::IAM::Role'
