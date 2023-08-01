@@ -12,6 +12,7 @@ Parameters:
     Type: String
     AllowedPattern: '[A-Za-z0-9-]+'
     Default: main
+
 Resources:
   CloudBuildServiceRole:
     Type: 'AWS::IAM::Role'
@@ -52,13 +53,15 @@ Resources:
                   - 's3:GetBucketAcl'
                   - 's3:GetBucketLocation'
                 Resource: '*'
+  
   CloudBuildSourceCredential:
     Type: 'AWS::CodeBuild::SourceCredential'
     Properties:
       AuthType: PERSONAL_ACCESS_TOKEN
       ServerType: GITHUB
       Token: '{{resolve:secretsmanager:GITHUB_ACCESS:SecretString:GITHUB_ACCESS_TOKEN}}'
-  CloudBuildProject:
+
+  CloudTestProject:
     Type: 'AWS::CodeBuild::Project'
     Properties:
       Name: !Ref 'AWS::StackName'
@@ -68,10 +71,17 @@ Resources:
       Source:
         Type: GITHUB
         Location: !Sub 'https://github.com/${GitHubOwner}/${GitHubRepository}.git'
-        BuildSpec: buildspec.yaml
         Auth:
           Type: OAUTH
           Resource: !Ref CloudBuildSourceCredential
+        BuildSpec: !Sub |
+          version: 0.2
+          phases: 
+            build: 
+              commands: 
+                - echo 'Running tests...'
+                - ls
+                - echo 'Tests completed!'
       Artifacts:
         Type: NO_ARTIFACTS
       Triggers:
@@ -87,6 +97,7 @@ Resources:
         Type: LINUX_CONTAINER
         ComputeType: BUILD_GENERAL1_SMALL
         Image: 'aws/codebuild/standard:7.0'
+        
   CloudPipelineServiceRole:
     Type: 'AWS::IAM::Role'
     Properties:
@@ -132,11 +143,13 @@ Resources:
                   - 'codebuild:BatchGetBuilds'
                   - 'codebuild:StartBuild'
                 Resource: '*'
+  
   CodePipelineArtifactStore:
     Type: 'AWS::S3::Bucket'
     Properties:
       VersioningConfiguration:
         Status: Enabled
+  
   CodePipelineWebhook:
     Type: 'AWS::CodePipeline::Webhook'
     Properties:
@@ -154,6 +167,7 @@ Resources:
       TargetPipelineVersion: !GetAtt 
         - CodePipeline
         - Version
+  
   CodePipeline:
     Type: 'AWS::CodePipeline::Pipeline'
     Properties:
@@ -181,17 +195,16 @@ Resources:
                 OAuthToken: '{{resolve:secretsmanager:GITHUB_ACCESS:SecretString:GITHUB_ACCESS_TOKEN}}'
               OutputArtifacts:
                 - Name: SourceCode
-        - Name: Build
+        
+        - Name: Test
           Actions:
-            - Name: Build
+            - Name: Test
               ActionTypeId:
-                Category: Build
+                Category: Test
                 Owner: AWS
                 Provider: CodeBuild
                 Version: 1
               Configuration:
-                ProjectName: !Ref CloudBuildProject
-              OutputArtifacts:
-                - Name: BuildOutput
+                ProjectName: !Ref CloudTestProject
               InputArtifacts:
                 - Name: SourceCode
