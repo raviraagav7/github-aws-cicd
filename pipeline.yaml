@@ -88,11 +88,11 @@ Resources:
         Webhook: true
         FilterGroups:
           - - Type: EVENT
-              Pattern: 'PUSH, PULL_REQUEST_CREATED, PULL_REQUEST_UPDATED, PULL_REQUEST_REOPENED'
-              ExcludeMatchedPattern: false
-            - Type: 'HEAD_REF'
+              Pattern: >-
+                PULL_REQUEST_CREATED, PULL_REQUEST_UPDATED,
+                PULL_REQUEST_REOPENED
+            - Type: BASE_REF
               Pattern: !Sub '^refs/heads/${GitHubBranch}$'
-              ExcludeMatchedPattern: false
       Environment:
         Type: LINUX_CONTAINER
         ComputeType: BUILD_GENERAL1_SMALL
