@@ -65,9 +65,7 @@ Resources:
     Type: 'AWS::CodeBuild::Project'
     Properties:
       Name: !Ref 'AWS::StackName'
-      ServiceRole: !GetAtt 
-        - CloudBuildServiceRole
-        - Arn
+      ServiceRole: !GetAtt CloudBuildServiceRole.Arn
       Source:
         Type: GITHUB
         Location: !Sub 'https://github.com/${GitHubOwner}/${GitHubRepository}.git'
@@ -198,14 +196,13 @@ Resources:
       RegisterWithThirdParty: 'true'
       Filters:
         - JsonPath: $.ref
-          MatchEquals: 'ref/heads/{Branch}'
+          # MatchEquals: 'ref/heads/{Branch}'
+          MatchEquals: 'refs/pull/*'
         - JsonPath: $.repository.name
           MatchEquals: '{Repo}'
       TargetPipeline: !Ref CodePipeline
       TargetAction: Source
-      TargetPipelineVersion: !GetAtt 
-        - CodePipeline
-        - Version
+      TargetPipelineVersion: !GetAtt CodePipeline.Version
   
   CodePipeline:
     Type: 'AWS::CodePipeline::Pipeline'
