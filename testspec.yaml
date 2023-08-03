@@ -3,5 +3,6 @@ phases:
   build: 
     commands: 
       - echo 'Running tests...'
+      - pwd
       - ls
       - echo 'Tests completed!'
