@@ -1,5 +1,11 @@
 version: 0.2
 phases:
+  install:
+    runtime-versions:
+      python: 3.8
+    commands:
+      # Install Miniconda
+      - wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh
   build: 
     commands: 
       - echo 'Running tests...'
