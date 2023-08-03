@@ -87,7 +87,7 @@ Resources:
         Auth:
           Type: OAUTH
           Resource: !Ref CloudBuildSourceCredential
-        BuildSpec: 
+        BuildSpec: !Sub |
           version: 0.2
           phases:
             install:
