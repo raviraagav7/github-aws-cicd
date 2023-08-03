@@ -74,14 +74,25 @@ Resources:
         Auth:
           Type: OAUTH
           Resource: !Ref CloudBuildSourceCredential
-        BuildSpec: !Sub |
-          version: 0.2
-          phases: 
-            build: 
-              commands: 
-                - echo 'Running tests...'
-                - ls
-                - echo 'Tests completed!'
+        BuildSpec: testspec.yaml
+        # BuildSpec: !Sub |
+          # version: 0.2
+          # phases:
+          #   install:
+          #     commands:
+          #       - echo Entered the install phase...
+          #       - wget https://repo.anaconda.com/miniconda/Miniconda3-py310_23.5.2-0-Linux-x86_64.sh
+          #       - mkdir /root/.conda
+          #       - bash Miniconda3-py310_23.5.2-0-Linux-x86_64.sh -b
+          #       - rm -f Miniconda3-py310_23.5.2-0-Linux-x86_64.sh
+          #       - echo PATH="/root/miniconda3/bin":$PATH >> .bashrc
+          #       - exec bash
+          #       - conda --version
+          #   build: 
+          #     commands: 
+          #       - echo 'Running tests...'
+          #       - ls
+          #       - echo 'Tests completed!'
       Artifacts:
         Type: NO_ARTIFACTS
       Triggers:
