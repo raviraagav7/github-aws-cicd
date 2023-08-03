@@ -5,13 +5,24 @@ Parameters:
     Type: String
     AllowedPattern: '[A-Za-z0-9-]+'
     Default: raviraagav7
+    Description: >
+      Owner of the GitHub Repository containing the CloudFormation template being deployed. Usually
+      your GitHub username
   GitHubRepository:
     Type: String
     AllowedPattern: '[A-Za-z0-9-]+'
+    Description: >
+      Name of the GitHub repository containing the CloudFormation template being deployed. For this
+      example, most likely would be "aws-cloudformation-pipeline-example" but might be different if
+      you changed the name of the forked repository
   GitHubBranch:
     Type: String
     AllowedPattern: '[A-Za-z0-9-]+'
     Default: main
+    Description: >
+      Git branch on which integration occurs. Typical value here would be "master" but might differ
+      for your specific use case
+
 Resources:
   CloudBuildServiceRole:
     Type: 'AWS::IAM::Role'
@@ -52,13 +63,15 @@ Resources:
                   - 's3:GetBucketAcl'
                   - 's3:GetBucketLocation'
                 Resource: '*'
+  
   CloudBuildSourceCredential:
     Type: 'AWS::CodeBuild::SourceCredential'
     Properties:
       AuthType: PERSONAL_ACCESS_TOKEN
       ServerType: GITHUB
       Token: '{{resolve:secretsmanager:GITHUB_ACCESS:SecretString:GITHUB_ACCESS_TOKEN}}'
-  CloudBuildProject:
+  
+  CloudTestProject:
     Type: 'AWS::CodeBuild::Project'
     Properties:
       Name: !Ref 'AWS::StackName'
@@ -68,7 +81,7 @@ Resources:
       Source:
         Type: GITHUB
         Location: !Sub 'https://github.com/${GitHubOwner}/${GitHubRepository}.git'
-        BuildSpec: buildspec.yaml
+        BuildSpec: testspec.yaml
         Auth:
           Type: OAUTH
           Resource: !Ref CloudBuildSourceCredential
@@ -87,6 +100,7 @@ Resources:
         Type: LINUX_CONTAINER
         ComputeType: BUILD_GENERAL1_SMALL
         Image: 'aws/codebuild/standard:7.0'
+
   CloudPipelineServiceRole:
     Type: 'AWS::IAM::Role'
     Properties:
@@ -132,11 +146,13 @@ Resources:
                   - 'codebuild:BatchGetBuilds'
                   - 'codebuild:StartBuild'
                 Resource: '*'
+
   CodePipelineArtifactStore:
     Type: 'AWS::S3::Bucket'
     Properties:
       VersioningConfiguration:
         Status: Enabled
+
   CodePipelineWebhook:
     Type: 'AWS::CodePipeline::Webhook'
     Properties:
@@ -155,6 +171,7 @@ Resources:
         - CodePipeline
         - Version
   CodePipeline:
+
     Type: 'AWS::CodePipeline::Pipeline'
     Properties:
       Name: !Ref 'AWS::StackName'
@@ -181,16 +198,16 @@ Resources:
                 OAuthToken: '{{resolve:secretsmanager:GITHUB_ACCESS:SecretString:GITHUB_ACCESS_TOKEN}}'
               OutputArtifacts:
                 - Name: SourceCode
-        - Name: Build
+        - Name: Test
           Actions:
-            - Name: Build
+            - Name: Test
               ActionTypeId:
                 Category: Build
                 Owner: AWS
                 Provider: CodeBuild
                 Version: 1
               Configuration:
-                ProjectName: !Ref CloudBuildProject
+                ProjectName: !Ref CloudTestProject
               OutputArtifacts:
                 - Name: BuildOutput
               InputArtifacts:
