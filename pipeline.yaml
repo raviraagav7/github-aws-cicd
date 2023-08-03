@@ -108,6 +108,34 @@ Resources:
         Type: LINUX_CONTAINER
         ComputeType: BUILD_GENERAL1_SMALL
         Image: 'aws/codebuild/standard:7.0'
+
+  PipelineFailureAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: CodePipelineFailureAlarm
+      AlarmDescription: Alarm to alert when CodePipeline fails
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      EvaluationPeriods: 1
+      MetricName: Failed
+      Namespace: AWS/CodePipeline
+      Dimensions:
+        - Name: !Ref 'AWS::StackName'
+          Value: !Ref CodePipeline
+      Statistic: Sum
+      Period: 60
+      Threshold: 1
+      AlarmActions:
+        - !Ref AlarmNotificationTopic
+      AlarmDescription: "CodePipeline has failed"
+      TreatMissingData: missing
+
+  AlarmNotificationTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      DisplayName: CodePipelineAlarmTopic
+      Subscription:
+        - Endpoint: raviraagav7@gmail.com  # Replace with your email or other endpoints for notifications
+          Protocol: email
         
   CloudPipelineServiceRole:
     Type: 'AWS::IAM::Role'
