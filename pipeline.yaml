@@ -12,6 +12,20 @@ Parameters:
     Type: String
     AllowedPattern: '[A-Za-z0-9-]+'
     Default: main
+  PassGitHubPersonalAccessTokenToCodeBuild:
+    Type: String
+    AllowedValues:
+      - "true"
+      - "false"
+    Default: "true"
+    Description: >
+      Determines whether or not your personal access token is passed to CodeBuild. Set this value to
+      "true" if this is the first time using CodeBuild with GitHub, as CodeBuild only supports one
+      personal access token per account, per region. If you have already configured other CodeBuild
+      projects to integrate with GitHub previously, set this value to "false".
+
+Conditions:
+  CreateCodeBuildCredentials: !Equals [ !Sub "${PassGitHubPersonalAccessTokenToCodeBuild}", "true" ]
 
 Resources:
   CloudBuildServiceRole:
@@ -67,41 +81,33 @@ Resources:
       Name: !Ref 'AWS::StackName'
       ServiceRole: !GetAtt CloudBuildServiceRole.Arn
       Source:
+        GitCloneDepth: 1
         Type: GITHUB
         Location: !Sub 'https://github.com/${GitHubOwner}/${GitHubRepository}.git'
         Auth:
           Type: OAUTH
           Resource: !Ref CloudBuildSourceCredential
-        BuildSpec: testspec.yaml
-        # BuildSpec: !Sub |
-          # version: 0.2
-          # phases:
-          #   install:
-          #     commands:
-          #       - echo Entered the install phase...
-          #       - wget https://repo.anaconda.com/miniconda/Miniconda3-py310_23.5.2-0-Linux-x86_64.sh
-          #       - mkdir /root/.conda
-          #       - bash Miniconda3-py310_23.5.2-0-Linux-x86_64.sh -b
-          #       - rm -f Miniconda3-py310_23.5.2-0-Linux-x86_64.sh
-          #       - echo PATH="/root/miniconda3/bin":$PATH >> .bashrc
-          #       - exec bash
-          #       - conda --version
-          #   build: 
-          #     commands: 
-          #       - echo 'Running tests...'
-          #       - ls
-          #       - echo 'Tests completed!'
+        BuildSpec: 
+          version: 0.2
+          phases:
+            install:
+              commands:
+                - ls
       Artifacts:
         Type: NO_ARTIFACTS
+      Cache:
+        Type: LOCAL
+        Modes:
+          - LOCAL_SOURCE_CACHE
       Triggers:
         Webhook: true
         FilterGroups:
           - - Type: EVENT
-              Pattern: >-
-                PULL_REQUEST_CREATED, PULL_REQUEST_UPDATED,
-                PULL_REQUEST_REOPENED
+              Pattern: PULL_REQUEST_CREATED, PULL_REQUEST_UPDATED, PULL_REQUEST_REOPENED
+              ExcludeMatchedPattern: false
             - Type: BASE_REF
               Pattern: !Sub '^refs/heads/${GitHubBranch}$'
+              ExcludeMatchedPattern: false
       Environment:
         Type: LINUX_CONTAINER
         ComputeType: BUILD_GENERAL1_SMALL
@@ -196,21 +202,17 @@ Resources:
       RegisterWithThirdParty: 'true'
       Filters:
         - JsonPath: $.ref
-          # MatchEquals: 'ref/heads/{Branch}'
-          MatchEquals: 'refs/pull/*'
-        - JsonPath: $.repository.name
-          MatchEquals: '{Repo}'
+          MatchEquals: refs/heads/{Branch}
       TargetPipeline: !Ref CodePipeline
       TargetAction: Source
       TargetPipelineVersion: !GetAtt CodePipeline.Version
+
   
   CodePipeline:
     Type: 'AWS::CodePipeline::Pipeline'
     Properties:
       Name: !Ref 'AWS::StackName'
-      RoleArn: !GetAtt 
-        - CloudPipelineServiceRole
-        - Arn
+      RoleArn: !GetAtt CloudPipelineServiceRole.Arn
       ArtifactStore:
         Type: S3
         Location: !Ref CodePipelineArtifactStore
@@ -218,6 +220,8 @@ Resources:
         - Name: Source
           Actions:
             - Name: Source
+              RunOrder: 1
+              InputArtifacts: []
               ActionTypeId:
                 Category: Source
                 Owner: ThirdParty
