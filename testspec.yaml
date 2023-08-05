@@ -18,7 +18,7 @@ phases:
       - source ~/.bashrc 
       - conda update -n base -c defaults conda
       - conda env create -f environment.yaml
-      - conda env list
+      - conda activate paivbio_env
       - which python
   build: 
     commands: 
