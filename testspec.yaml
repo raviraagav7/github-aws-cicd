@@ -10,7 +10,7 @@ phases:
       - ./miniconda.sh -b -p $HOME/miniconda
       - export PATH="$HOME/miniconda/bin:$PATH"
       - echo 'export PATH="$HOME/miniconda/bin:$PATH"' >> $HOME/.bashrc
-      - source $HOME/.bashrc
+      - cat $HOME/.bashrc
   build: 
     commands: 
       - echo 'Running tests...'
