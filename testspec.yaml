@@ -1,4 +1,6 @@
 version: 0.2
+env:
+  shell: bash
 phases:
   install:
     runtime-versions:
@@ -14,7 +16,6 @@ phases:
     finally:
       - conda env create -f environment.yaml
       - cat testspec.yaml
-      - conda init bash
       - conda activate paivbio_env
       - which python
   build: 
