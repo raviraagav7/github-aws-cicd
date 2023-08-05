@@ -13,6 +13,7 @@ phases:
       - conda --version
     finally:
       - conda env create -f environment.yaml
+      - conda init bash
       - conda activate paivbio_env
       - which python
   build: 
