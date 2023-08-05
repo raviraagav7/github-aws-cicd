@@ -13,9 +13,9 @@ phases:
       - export PATH="$HOME/miniconda/bin:$PATH"
       - echo 'export PATH="$HOME/miniconda/bin:$PATH"' >> $HOME/.bashrc
       - conda --version
+      - source ~/.bashrc
     finally:
       - conda env create -f environment.yaml
-      - conda init bash
       - conda activate paivbio_env
       - which python
   build: 
