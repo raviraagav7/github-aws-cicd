@@ -2,6 +2,7 @@ name: paivbio_env
 channels:
   - defaults
 dependencies:
+  - python=3.11
   - ca-certificates=2023.05.30=hecd8cb5_0
   - libcxx=14.0.6=h9765a3e_0
   - libffi=3.4.4=hecd8cb5_0
