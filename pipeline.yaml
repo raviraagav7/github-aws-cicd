@@ -170,8 +170,36 @@ Resources:
       TargetPipelineVersion: !GetAtt 
         - CodePipeline
         - Version
-  CodePipeline:
 
+  PipelineFailureAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: CodePipelineFailureAlarm
+      AlarmDescription: Alarm to alert when CodePipeline fails
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      EvaluationPeriods: 1
+      MetricName: Failed
+      Namespace: AWS/CodePipeline
+      Dimensions:
+        - Name: !Ref 'AWS::StackName'
+          Value: !Ref CodePipeline
+      Statistic: Sum
+      Period: 60
+      Threshold: 1
+      AlarmActions:
+        - !Ref AlarmNotificationTopic
+      AlarmDescription: "A part of the CodePipeline has failed"
+      TreatMissingData: missing
+
+  AlarmNotificationTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      DisplayName: CodePipelineAlarmTopic
+      Subscription:
+        - Endpoint: raviraagav7@gmail.com  # Replace with your email or other endpoints for notifications
+          Protocol: email
+
+  CodePipeline:
     Type: 'AWS::CodePipeline::Pipeline'
     Properties:
       Name: !Ref 'AWS::StackName'
