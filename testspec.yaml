@@ -18,8 +18,6 @@ phases:
   build: 
     commands: 
       - source activate paivbio_env
-      - python --version
       - echo 'Running tests...'
-      - pwd
-      - ls
+      - python -m unittest discover -s tests -v
       - echo 'Tests completed!'
