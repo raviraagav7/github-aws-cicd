@@ -16,7 +16,6 @@ setup(
     classifiers=[
         'Development Status :: 3 - Alpha',  # Chose either '3 - Alpha', '4 - Beta' or '5 - Production/Stable' as the current state of your package
         'Intended Audience :: Developers',  # Define the audience of your package. Should be one of 'Developers', 'Education', 'Science/Research', 'System Administrators', 'End Users/Desktop', 'Other Audience'
-        'License :: OSI Approved :: MIT License',  # Choose the license of your package. Should be a license from the list of approved licenses by OSI: https://opensource.org/licenses/alphabetical
         'Programming Language :: Python :: 3.7',  # Specify the Python versions your package works on
         'Programming Language :: Python :: 3.8',
     ],
