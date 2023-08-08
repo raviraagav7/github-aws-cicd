@@ -161,7 +161,7 @@ Resources:
                 - PASSWORD=$(aws codeartifact get-authorization-token --domain $CODEARTIFACT_DOMAIN --domain-owner 264896465647 --query authorizationToken --output text)
                 - if [ ! -f ~/.pypirc ]; then touch ~/.pypirc; echo "[distutils]" >> ~/.pypirc; echo "index-servers =" >> ~/.pypirc; fi
                 - | 
-                  echo "\n$REPO_NAME\n\n[$REPO_NAME]\nrepository: $REPO_URL\nusername: $USERNAME\npassword: $PASSWORD" >> ~/.pypirc
+                  echo -e "[$REPO_NAME]\nrepository = $REPO_URL\nusername = $USERNAME\npassword = $PASSWORD" >> ~/.pypirc
                 - twine upload --repository $CODEARTIFACT_REPO dist/*
       Triggers:
         Webhook: true
