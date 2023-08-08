@@ -21,7 +21,3 @@ phases:
       - echo 'Running tests...'
       - python -m unittest discover -s tests -v
       - echo 'Tests completed!'
-
-# artifacts:
-#   files:
-#     - '**/*'
