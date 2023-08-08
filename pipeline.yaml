@@ -79,23 +79,25 @@ Resources:
         - CloudBuildServiceRole
         - Arn
       Source:
-        Type: GITHUB
-        Location: !Sub 'https://github.com/${GitHubOwner}/${GitHubRepository}.git'
+        Type: CODEPIPELINE
+        # Type: GITHUB
+        # Location: !Sub 'https://github.com/${GitHubOwner}/${GitHubRepository}.git'
         BuildSpec: testspec.yaml
-        Auth:
-          Type: OAUTH
-          Resource: !Ref CloudBuildSourceCredential
+        # Auth:
+        #   Type: OAUTH
+        #   Resource: !Ref CloudBuildSourceCredential
       Artifacts:
-        Type: NO_ARTIFACT
-      Triggers:
-        Webhook: true
-        FilterGroups:
-          - - Type: EVENT
-              Pattern: >-
-                PULL_REQUEST_CREATED, PULL_REQUEST_UPDATED,
-                PULL_REQUEST_REOPENED
-            - Type: BASE_REF
-              Pattern: !Sub '^refs/heads/${GitHubBranch}$'
+        # Type: NO_ARTIFACTS
+        Type: CODEPIPELINE
+      # Triggers:
+      #   Webhook: true
+      #   FilterGroups:
+      #     - - Type: EVENT
+      #         Pattern: >-
+      #           PULL_REQUEST_CREATED, PULL_REQUEST_UPDATED,
+      #           PULL_REQUEST_REOPENED
+      #       - Type: BASE_REF
+      #         Pattern: !Sub '^refs/heads/${GitHubBranch}$'
       Environment:
         Type: LINUX_CONTAINER
         ComputeType: BUILD_GENERAL1_SMALL
@@ -280,7 +282,9 @@ Resources:
                 ProjectName: !Ref CloudTestProject
               InputArtifacts:
                 - Name: SourceCode
-              RunOrder: 1
+              OutputArtifacts: 
+                - Name: TestOutput
+              RunOrder: 2
         - Name: Package
           Actions:
             - Name: Package
@@ -292,5 +296,7 @@ Resources:
               Configuration:
                 ProjectName: !Ref CodeBuildProject
               InputArtifacts:
-                - Name: SourceCode
-              RunOrder: 1
+                - Name: TestOutput
+              OutputArtifacts: 
+                - Name: PackageOutput
+              RunOrder: 3
