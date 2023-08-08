@@ -294,4 +294,4 @@ Resources:
               OutputArtifacts:
                 - Name: PackageOutput
               InputArtifacts:
-                - Name: TestOutput
+                - Name: SourceCode
