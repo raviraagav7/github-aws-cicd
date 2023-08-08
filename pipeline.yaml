@@ -107,7 +107,7 @@ Resources:
       Name: CodeBuildProject-Python-Package
       Description: 'CodeBuild project for Python package'
       Artifacts:
-        Type: CODEPIPELINE
+        Type: NO_ARTIFACTS
       Environment:
         ComputeType: BUILD_GENERAL1_SMALL
         Image: aws/codebuild/python:3.7.1
@@ -118,7 +118,8 @@ Resources:
           - Name: CODEARTIFACT_REPO
             Value: paiv230806-test
       Source:
-        Type: CODEPIPELINE
+        Type: GITHUB
+        Location: !Sub 'https://github.com/${GitHubOwner}/${GitHubRepository}.git'
         BuildSpec: |
           version: 0.2
           phases:
@@ -267,6 +268,7 @@ Resources:
                 OAuthToken: '{{resolve:secretsmanager:GITHUB_ACCESS:SecretString:GITHUB_ACCESS_TOKEN}}'
               OutputArtifacts:
                 - Name: SourceCode
+              RunOrder: 1
         - Name: Test
           Actions:
             - Name: Test
@@ -281,6 +283,7 @@ Resources:
                 - Name: TestOutput
               InputArtifacts:
                 - Name: SourceCode
+              RunOrder: 2
         - Name: Package
           Actions:
             - Name: Package
@@ -294,4 +297,5 @@ Resources:
               OutputArtifacts:
                 - Name: PackageOutput
               InputArtifacts:
-                - Name: SourceCode
+                - Name: TestOutput
+              RunOrder: 3
