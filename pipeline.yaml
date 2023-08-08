@@ -162,7 +162,8 @@ Resources:
                 - if [ ! -f ~/.pypirc ]; then touch ~/.pypirc; echo "[distutils]" >> ~/.pypirc; echo "index-servers =" >> ~/.pypirc; fi
                 - | 
                   printf "%s\n\n[%s]\nrepository: %s\nusername: %s\npassword: %s" "$REPO_NAME" "$REPO_NAME" "$REPO_URL" "$USERNAME" "$PASSWORD" >> ~/.pypirc
-                - twine upload --repository $CODEARTIFACT_REPO dist/*
+                - sed -i '3s/^paiv230806-test$/[&]/' /root/.pypirc
+                - cat /root/.pypirc
       Triggers:
         Webhook: true
         FilterGroups:
