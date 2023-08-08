@@ -208,6 +208,8 @@ Resources:
           MatchEquals: 'ref/heads/{Branch}'
         - JsonPath: $.repository.name
           MatchEquals: '{Repo}'
+        - JsonPath: '$.action'
+          MatchEquals: 'opened, reopened, synchronized'
       TargetPipeline: !Ref CodePipeline
       TargetAction: Source
       TargetPipelineVersion: !GetAtt 
@@ -269,7 +271,6 @@ Resources:
                 OAuthToken: '{{resolve:secretsmanager:GITHUB_ACCESS:SecretString:GITHUB_ACCESS_TOKEN}}'
               OutputArtifacts:
                 - Name: SourceCode
-              RunOrder: 1
         - Name: Test
           Actions:
             - Name: Test
@@ -284,7 +285,6 @@ Resources:
                 - Name: SourceCode
               OutputArtifacts: 
                 - Name: TestOutput
-              RunOrder: 2
         - Name: Package
           Actions:
             - Name: Package
@@ -297,6 +297,3 @@ Resources:
                 ProjectName: !Ref CodeBuildProject
               InputArtifacts:
                 - Name: TestOutput
-              OutputArtifacts: 
-                - Name: PackageOutput
-              RunOrder: 3
