@@ -79,70 +79,27 @@ Resources:
         - CloudBuildServiceRole
         - Arn
       Source:
-        Type: CODEPIPELINE
-        # Type: GITHUB
-        # Location: !Sub 'https://github.com/${GitHubOwner}/${GitHubRepository}.git'
+        Type: GITHUB
+        Location: !Sub 'https://github.com/${GitHubOwner}/${GitHubRepository}.git'
         BuildSpec: testspec.yaml
-        # Auth:
-        #   Type: OAUTH
-        #   Resource: !Ref CloudBuildSourceCredential
+        Auth:
+          Type: OAUTH
+          Resource: !Ref CloudBuildSourceCredential
       Artifacts:
-        # Type: NO_ARTIFACTS
-        Type: CODEPIPELINE
-      # Triggers:
-      #   Webhook: true
-      #   FilterGroups:
-      #     - - Type: EVENT
-      #         Pattern: >-
-      #           PULL_REQUEST_CREATED, PULL_REQUEST_UPDATED,
-      #           PULL_REQUEST_REOPENED
-      #       - Type: BASE_REF
-      #         Pattern: !Sub '^refs/heads/${GitHubBranch}$'
+        Type: NO_ARTIFACTS
+      Triggers:
+        Webhook: true
+        FilterGroups:
+          - - Type: EVENT
+              Pattern: >-
+                PULL_REQUEST_CREATED, PULL_REQUEST_UPDATED,
+                PULL_REQUEST_REOPENED
+            - Type: BASE_REF
+              Pattern: !Sub '^refs/heads/${GitHubBranch}$'
       Environment:
         Type: LINUX_CONTAINER
         ComputeType: BUILD_GENERAL1_SMALL
         Image: 'aws/codebuild/standard:7.0'
-
-  CodeBuildProject:
-    Type: AWS::CodeBuild::Project
-    Properties:
-      Name: CodeBuildProject-Python-Package
-      Description: 'CodeBuild project for Python package'
-      Artifacts:
-        Type: CODEPIPELINE
-      Environment:
-        ComputeType: BUILD_GENERAL1_SMALL
-        Image: aws/codebuild/python:3.7.1
-        Type: LINUX_CONTAINER
-        EnvironmentVariables:
-          - Name: CODEARTIFACT_DOMAIN
-            Value: paiv230806-test
-          - Name: CODEARTIFACT_REPO
-            Value: paiv230806-test
-      Source:
-        Type: CODEPIPELINE
-        BuildSpec: |
-          version: 0.2
-          phases:
-            install:
-              commands:
-                - echo Installing dependencies...
-                - pip install --upgrade pip
-                - pip install twine
-            pre_build:
-              commands:
-                - echo Pre-build steps...
-                - echo Importing CodeArtifact credentials...
-                - aws codeartifact login --tool pip --domain $CODEARTIFACT_DOMAIN --repository $CODEARTIFACT_REPO --domain-owner 264896465647 --region us-east-1
-            build:
-              commands:
-                - echo Building python package...
-                - python setup.py sdist bdist_wheel
-            post_build:
-              commands:
-                - echo Publishing python package...
-                - twine upload --repository $CODEARTIFACT_REPO dist/*
-      ServiceRole: !GetAtt CloudBuildServiceRole.Arn
 
   CloudPipelineServiceRole:
     Type: 'AWS::IAM::Role'
@@ -208,8 +165,6 @@ Resources:
           MatchEquals: 'ref/heads/{Branch}'
         - JsonPath: $.repository.name
           MatchEquals: '{Repo}'
-        - JsonPath: '$.action'
-          MatchEquals: 'opened, reopened, synchronized'
       TargetPipeline: !Ref CodePipeline
       TargetAction: Source
       TargetPipelineVersion: !GetAtt 
@@ -281,19 +236,7 @@ Resources:
                 Version: 1
               Configuration:
                 ProjectName: !Ref CloudTestProject
+              OutputArtifacts:
+                - Name: BuildOutput
               InputArtifacts:
                 - Name: SourceCode
-              OutputArtifacts: 
-                - Name: TestOutput
-        - Name: Package
-          Actions:
-            - Name: Package
-              ActionTypeId:
-                Category: Build
-                Owner: AWS
-                Provider: CodeBuild
-                Version: 1
-              Configuration:
-                ProjectName: !Ref CodeBuildProject
-              InputArtifacts:
-                - Name: TestOutput
