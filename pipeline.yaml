@@ -155,6 +155,8 @@ Resources:
             post_build:
               commands:
                 - echo Publishing python package...
+                - export CODEARTIFACT_AUTH_TOKEN=`aws codeartifact get-authorization-token --domain paiv230806-test --domain-owner 264896465647 --region us-east-1 --query authorizationToken --output text`
+                - export CODEARTIFACT_REPO=https://aws:$CODEARTIFACT_AUTH_TOKEN@paiv230806-test-264896465647.d.codeartifact.us-east-1.amazonaws.com/pypi/paiv230806-test/simple/
                 - twine upload --repository $CODEARTIFACT_REPO dist/*
       Triggers:
         Webhook: true
