@@ -86,7 +86,7 @@ Resources:
           Type: OAUTH
           Resource: !Ref CloudBuildSourceCredential
       Artifacts:
-        Type: NO_ARTIFACTS
+        Type: NO_ARTIFACT
       Triggers:
         Webhook: true
         FilterGroups:
@@ -107,7 +107,7 @@ Resources:
       Name: CodeBuildProject-Python-Package
       Description: 'CodeBuild project for Python package'
       Artifacts:
-        Type: NO_ARTIFACTS
+        Type: CODEPIPELINE
       Environment:
         ComputeType: BUILD_GENERAL1_SMALL
         Image: aws/codebuild/python:3.7.1
@@ -118,8 +118,7 @@ Resources:
           - Name: CODEARTIFACT_REPO
             Value: paiv230806-test
       Source:
-        Type: GITHUB
-        Location: !Sub 'https://github.com/${GitHubOwner}/${GitHubRepository}.git'
+        Type: CODEPIPELINE
         BuildSpec: |
           version: 0.2
           phases:
@@ -141,15 +140,6 @@ Resources:
               commands:
                 - echo Publishing python package...
                 - twine upload --repository $CODEARTIFACT_REPO dist/*
-      Triggers:
-        Webhook: true
-        FilterGroups:
-          - - Type: EVENT
-              Pattern: >-
-                PULL_REQUEST_CREATED, PULL_REQUEST_UPDATED,
-                PULL_REQUEST_REOPENED
-            - Type: BASE_REF
-              Pattern: !Sub '^refs/heads/${GitHubBranch}$'
       ServiceRole: !GetAtt CloudBuildServiceRole.Arn
 
   CloudPipelineServiceRole:
@@ -288,11 +278,9 @@ Resources:
                 Version: 1
               Configuration:
                 ProjectName: !Ref CloudTestProject
-              OutputArtifacts:
-                - Name: TestOutput
               InputArtifacts:
                 - Name: SourceCode
-              RunOrder: 2
+              RunOrder: 1
         - Name: Package
           Actions:
             - Name: Package
@@ -303,8 +291,6 @@ Resources:
                 Version: 1
               Configuration:
                 ProjectName: !Ref CodeBuildProject
-              OutputArtifacts:
-                - Name: PackageOutput
               InputArtifacts:
-                - Name: TestOutput
-              RunOrder: 3
+                - Name: SourceCode
+              RunOrder: 1
