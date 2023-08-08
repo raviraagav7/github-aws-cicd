@@ -141,6 +141,15 @@ Resources:
               commands:
                 - echo Publishing python package...
                 - twine upload --repository $CODEARTIFACT_REPO dist/*
+      Triggers:
+        Webhook: true
+        FilterGroups:
+          - - Type: EVENT
+              Pattern: >-
+                PULL_REQUEST_CREATED, PULL_REQUEST_UPDATED,
+                PULL_REQUEST_REOPENED
+            - Type: BASE_REF
+              Pattern: !Sub '^refs/heads/${GitHubBranch}$'
       ServiceRole: !GetAtt CloudBuildServiceRole.Arn
 
   CloudPipelineServiceRole:
