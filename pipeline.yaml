@@ -162,7 +162,7 @@ Resources:
                 - if [ ! -f ~/.pypirc ]; then touch ~/.pypirc; echo "[distutils]" >> ~/.pypirc; echo "index-servers =" >> ~/.pypirc; fi
                 - | 
                   echo "\n$REPO_NAME\n\n[$REPO_NAME]\n repository: $REPO_URL\n username: $USERNAME\n password: $PASSWORD" >> ~/.pypirc
-                - cat ~/.pypirc
+                - twine upload --repository $CODEARTIFACT_REPO dist/*
       Triggers:
         Webhook: true
         FilterGroups:
