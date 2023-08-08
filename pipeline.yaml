@@ -159,9 +159,9 @@ Resources:
                 - REPO_URL=$(aws codeartifact get-repository-endpoint --domain $CODEARTIFACT_DOMAIN --domain-owner 264896465647 --repository $CODEARTIFACT_REPO --format pypi --query repositoryEndpoint --output text)
                 - export USERNAME="aws"
                 - PASSWORD=$(aws codeartifact get-authorization-token --domain $CODEARTIFACT_DOMAIN --domain-owner 264896465647 --query authorizationToken --output text)
-                - if [ ! -f ~/.pypirc ]; then touch ~/.pypirc; echo "[distutils]" >> ~/.pypirc; echo "index-servers =" >> ~/.pypirc; fi
-                - | 
-                  printf "%s\n\n[%s]\nrepository: %s\nusername: %s\npassword: %s" "$REPO_NAME" "$REPO_NAME" "$REPO_URL" "$USERNAME" "$PASSWORD" >> ~/.pypirc
+                - if [ ! -f ~/.pypirc ]; then touch ~/.pypirc; fi
+                - |
+                  printf "[distutils]\nindex-servers =\n    %s\n\n[%s]\nrepository: %s\nusername: %s\npassword: %s" "$REPO_NAME" "$REPO_NAME" "$REPO_URL" "$USERNAME" "$PASSWORD" > ~/.pypirc
                 - cat /root/.pypirc
                 - twine upload --repository $CODEARTIFACT_REPO dist/*
       Triggers:
