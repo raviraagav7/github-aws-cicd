@@ -154,7 +154,7 @@ Resources:
                 - python setup.py sdist bdist_wheel
             post_build:
               commands:
-                - cho Publishing python package...
+                - echo Publishing python package...
                 - export REPO_NAME="paiv230806-test"
                 - REPO_URL=$(aws codeartifact get-repository-endpoint --domain $CODEARTIFACT_DOMAIN --domain-owner 264896465647 --repository $CODEARTIFACT_REPO --format pypi --query repositoryEndpoint --output text)
                 - export USERNAME="aws"
