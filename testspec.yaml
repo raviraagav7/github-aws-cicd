@@ -1,7 +1,23 @@
 version: 0.2
+env:
+  shell: bash
 phases:
+  install:
+    runtime-versions:
+      python: 3.11
+    commands:
+      # Install Miniconda
+      - wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh
+      - chmod +x miniconda.sh
+      - ./miniconda.sh -b -p $HOME/miniconda
+      - export PATH="$HOME/miniconda/bin:$PATH"
+      - echo 'export PATH="$HOME/miniconda/bin:$PATH"' >> $HOME/.bashrc
+      - source ~/.bashrc
+      - conda update -n base -c defaults conda
+      - conda env create -f environment.yaml
   build: 
     commands: 
+      - source activate paivbio_env
       - echo 'Running tests...'
-      - ls
+      - python -m unittest discover -s tests -v
       - echo 'Tests completed!'

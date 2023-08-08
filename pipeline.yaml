@@ -5,13 +5,24 @@ Parameters:
     Type: String
     AllowedPattern: '[A-Za-z0-9-]+'
     Default: raviraagav7
+    Description: >
+      Owner of the GitHub Repository containing the CloudFormation template being deployed. Usually
+      your GitHub username
   GitHubRepository:
     Type: String
     AllowedPattern: '[A-Za-z0-9-]+'
+    Description: >
+      Name of the GitHub repository containing the CloudFormation template being deployed. For this
+      example, most likely would be "aws-cloudformation-pipeline-example" but might be different if
+      you changed the name of the forked repository
   GitHubBranch:
     Type: String
     AllowedPattern: '[A-Za-z0-9-]+'
     Default: main
+    Description: >
+      Git branch on which integration occurs. Typical value here would be "master" but might differ
+      for your specific use case
+
 Resources:
   CloudBuildServiceRole:
     Type: 'AWS::IAM::Role'
@@ -52,23 +63,31 @@ Resources:
                   - 's3:GetBucketAcl'
                   - 's3:GetBucketLocation'
                 Resource: '*'
+              - Sid: CodeArtifactPolicy
+                Effect: Allow
+                Action:
+                  - 'codeartifact:GetAuthorizationToken'
+                  - 'codeartifact:GetRepositoryEndpoint'
+                  - 'codeartifact:DescribeRepository'
+                  - 'codeartifact:PutPackageVersion'
+                Resource: '*'
+  
   CloudBuildSourceCredential:
     Type: 'AWS::CodeBuild::SourceCredential'
     Properties:
       AuthType: PERSONAL_ACCESS_TOKEN
       ServerType: GITHUB
       Token: '{{resolve:secretsmanager:GITHUB_ACCESS:SecretString:GITHUB_ACCESS_TOKEN}}'
-  CloudBuildProject:
+  
+  CloudTestProject:
     Type: 'AWS::CodeBuild::Project'
     Properties:
       Name: !Ref 'AWS::StackName'
-      ServiceRole: !GetAtt 
-        - CloudBuildServiceRole
-        - Arn
+      ServiceRole: !GetAtt CloudBuildServiceRole.Arn
       Source:
         Type: GITHUB
         Location: !Sub 'https://github.com/${GitHubOwner}/${GitHubRepository}.git'
-        BuildSpec: buildspec.yaml
+        BuildSpec: testspec.yaml
         Auth:
           Type: OAUTH
           Resource: !Ref CloudBuildSourceCredential
@@ -87,6 +106,63 @@ Resources:
         Type: LINUX_CONTAINER
         ComputeType: BUILD_GENERAL1_SMALL
         Image: 'aws/codebuild/standard:7.0'
+
+
+  CodeBuildProject:
+    Type: AWS::CodeBuild::Project
+    Properties:
+      Name: CodeBuildProject-Python-Package
+      Description: 'CodeBuild project for Python package'
+      Artifacts:
+        Type: NO_ARTIFACTS
+      Environment:
+        ComputeType: BUILD_GENERAL1_SMALL
+        Image: aws/codebuild/python:3.7.1
+        Type: LINUX_CONTAINER
+        EnvironmentVariables:
+          - Name: CODEARTIFACT_DOMAIN
+            Value: paiv230806-test
+          - Name: CODEARTIFACT_REPO
+            Value: paiv230806-test
+      Source:
+        Type: GITHUB
+        Location: !Sub 'https://github.com/${GitHubOwner}/${GitHubRepository}.git'
+        Auth:
+          Type: OAUTH
+          Resource: !Ref CloudBuildSourceCredential
+        BuildSpec: |
+          version: 0.2
+          phases:
+            install:
+              runtime-versions:
+                python: 3.11
+              commands:
+                - echo Installing dependencies...
+                - pip install --upgrade pip
+                - pip install twine
+                - pip install --upgrade awscli
+                - pip install --upgrade setuptools
+                - pip install wheel
+            pre_build:
+              commands:
+                - echo Pre-build steps...
+                - echo Importing CodeArtifact credentials...
+                - aws codeartifact login --tool pip --domain $CODEARTIFACT_DOMAIN --repository $CODEARTIFACT_REPO --domain-owner 264896465647 --region us-east-1
+            build:
+              commands:
+                - echo Building python package...
+                - python setup.py sdist bdist_wheel
+      Triggers:
+        Webhook: true
+        FilterGroups:
+          - - Type: EVENT
+              Pattern: >-
+                PULL_REQUEST_CREATED, PULL_REQUEST_UPDATED,
+                PULL_REQUEST_REOPENED
+            - Type: BASE_REF
+              Pattern: !Sub '^refs/heads/${GitHubBranch}$'
+      ServiceRole: !GetAtt CloudBuildServiceRole.Arn
+
   CloudPipelineServiceRole:
     Type: 'AWS::IAM::Role'
     Properties:
@@ -132,11 +208,13 @@ Resources:
                   - 'codebuild:BatchGetBuilds'
                   - 'codebuild:StartBuild'
                 Resource: '*'
+
   CodePipelineArtifactStore:
     Type: 'AWS::S3::Bucket'
     Properties:
       VersioningConfiguration:
         Status: Enabled
+
   CodePipelineWebhook:
     Type: 'AWS::CodePipeline::Webhook'
     Properties:
@@ -154,6 +232,35 @@ Resources:
       TargetPipelineVersion: !GetAtt 
         - CodePipeline
         - Version
+
+  PipelineFailureAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: CodePipelineFailureAlarm
+      AlarmDescription: Alarm to alert when CodePipeline fails
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      EvaluationPeriods: 1
+      MetricName: Failed
+      Namespace: AWS/CodePipeline
+      Dimensions:
+        - Name: !Ref 'AWS::StackName'
+          Value: !Ref CodePipeline
+      Statistic: Sum
+      Period: 60
+      Threshold: 1
+      AlarmActions:
+        - !Ref AlarmNotificationTopic
+      AlarmDescription: "A part of the CodePipeline has failed"
+      TreatMissingData: missing
+
+  AlarmNotificationTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      DisplayName: CodePipelineAlarmTopic
+      Subscription:
+        - Endpoint: raviraagav7@gmail.com  # Replace with your email or other endpoints for notifications
+          Protocol: email
+
   CodePipeline:
     Type: 'AWS::CodePipeline::Pipeline'
     Properties:
@@ -181,17 +288,33 @@ Resources:
                 OAuthToken: '{{resolve:secretsmanager:GITHUB_ACCESS:SecretString:GITHUB_ACCESS_TOKEN}}'
               OutputArtifacts:
                 - Name: SourceCode
-        - Name: Build
+              RunOrder: 1  
+        - Name: Test
           Actions:
-            - Name: Build
+            - Name: Test
               ActionTypeId:
                 Category: Build
                 Owner: AWS
                 Provider: CodeBuild
                 Version: 1
               Configuration:
-                ProjectName: !Ref CloudBuildProject
-              OutputArtifacts:
-                - Name: BuildOutput
+                ProjectName: !Ref CloudTestProject
+              OutputArtifacts: []
               InputArtifacts:
                 - Name: SourceCode
+              RunOrder: 1
+        - Name: Package
+          Actions:
+            - Name: Package
+              ActionTypeId:
+                Category: Build
+                Owner: AWS
+                Provider: CodeBuild
+                Version: 1
+              Configuration:
+                ProjectName: !Ref CodeBuildProject
+              OutputArtifacts: []
+              InputArtifacts:
+                - Name: SourceCode
+              RunOrder: 1
+            
