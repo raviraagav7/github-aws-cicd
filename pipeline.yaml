@@ -68,7 +68,10 @@ Resources:
                 Action:
                   - 'codeartifact:GetAuthorizationToken'
                   - 'codeartifact:GetRepositoryEndpoint'
+                  - 'codeartifact:CompleteWorkflow'
                   - 'codeartifact:DescribeRepository'
+                  - 'codeartifact:GetPackageVersion'
+                  - 'codeartifact:PublishPackageVersion'
                   - 'codeartifact:PutPackageVersion'
                 Resource: '*'
   
