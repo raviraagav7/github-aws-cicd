@@ -63,6 +63,14 @@ Resources:
                   - 's3:GetBucketAcl'
                   - 's3:GetBucketLocation'
                 Resource: '*'
+              - Sid: CodeArtifactPolicy
+                Effect: Allow
+                Action:
+                  - 'codeartifact:GetAuthorizationToken'
+                  - 'codeartifact:GetRepositoryEndpoint'
+                  - 'codeartifact:DescribeRepository'
+                  - 'codeartifact:PutPackageVersion'
+                Resource: '*'
   
   CloudBuildSourceCredential:
     Type: 'AWS::CodeBuild::SourceCredential'
@@ -130,6 +138,7 @@ Resources:
                 - echo Installing dependencies...
                 - pip install --upgrade pip
                 - pip install twine
+                - pip install --upgrade awscli
             pre_build:
               commands:
                 - echo Pre-build steps...
