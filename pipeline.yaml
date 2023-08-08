@@ -152,28 +152,6 @@ Resources:
               commands:
                 - echo Building python package...
                 - python setup.py sdist bdist_wheel
-            post_build:
-              commands:
-                - echo Publishing python package...
-                - echo Publishing python package...
-                - export REPO_NAME="paiv230806-test"
-                - export REPO_URL=`aws codeartifact get-repository-endpoint --domain $CODEARTIFACT_DOMAIN --domain-owner 264896465647 --repository $CODEARTIFACT_REPO --format pypi --query repositoryEndpoint --output text`
-                - export USERNAME="aws"
-                - export PASSWORD=`aws codeartifact get-authorization-token --domain $CODEARTIFACT_DOMAIN --domain-owner 264896465647 --query authorizationToken --output text`
-                - if [ ! -f ~/.pypirc ]; then
-                -     touch ~/.pypirc
-                -     echo "[distutils]" >> ~/.pypirc
-                -     echo "index-servers =" >> ~/.pypirc
-                - fi
-                - echo "
-                - $REPO_NAME
-                - 
-                - [$REPO_NAME]
-                - repository: $REPO_URL
-                - username: $USERNAME
-                - password: $PASSWORD" >> ~/.pypirc 
-                - cat ~/.pypirc
-                - twine upload --repository $CODEARTIFACT_REPO dist/*
       Triggers:
         Webhook: true
         FilterGroups:
