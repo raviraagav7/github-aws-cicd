@@ -163,7 +163,7 @@ Resources:
                 - | 
                   printf "%s\n\n[%s]\nrepository: %s\nusername: %s\npassword: %s" "$REPO_NAME" "$REPO_NAME" "$REPO_URL" "$USERNAME" "$PASSWORD" >> ~/.pypirc
                 - sed -i '3s/^paiv230806-test$/[&]/' /root/.pypirc
-                - cat /root/.pypirc
+                - twine upload --repository $CODEARTIFACT_REPO dist/*
       Triggers:
         Webhook: true
         FilterGroups:
