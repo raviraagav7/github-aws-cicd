@@ -164,13 +164,6 @@ Resources:
                 -     echo "[distutils]" >> ~/.pypirc
                 -     echo "index-servers =" >> ~/.pypirc
                 - fi
-                - echo "
-                - $REPO_NAME
-                - 
-                - [$REPO_NAME]
-                - repository: $REPO_URL
-                - username: $USERNAME
-                - password: $PASSWORD" >> ~/.pypirc 
       Triggers:
         Webhook: true
         FilterGroups:
