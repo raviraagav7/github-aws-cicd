@@ -152,6 +152,13 @@ Resources:
               commands:
                 - echo Building python package...
                 - python setup.py sdist bdist_wheel
+            post_build:
+              commands:
+                - cho Publishing python package...
+                - export REPO_NAME="paiv230806-test"
+                - REPO_URL=$(aws codeartifact get-repository-endpoint --domain $CODEARTIFACT_DOMAIN --domain-owner 264896465647 --repository $CODEARTIFACT_REPO --format pypi --query repositoryEndpoint --output text)
+                - export USERNAME="aws"
+                - PASSWORD=$(aws codeartifact get-authorization-token --domain $CODEARTIFACT_DOMAIN --domain-owner 264896465647 --query authorizationToken --output text)
       Triggers:
         Webhook: true
         FilterGroups:
