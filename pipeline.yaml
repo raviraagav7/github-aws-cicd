@@ -68,7 +68,10 @@ Resources:
                 Action:
                   - 'codeartifact:GetAuthorizationToken'
                   - 'codeartifact:GetRepositoryEndpoint'
+                  - 'codeartifact:CompleteWorkflow'
                   - 'codeartifact:DescribeRepository'
+                  - 'codeartifact:GetPackageVersion'
+                  - 'codeartifact:PublishPackageVersion'
                   - 'codeartifact:PutPackageVersion'
                 Resource: '*'
   
@@ -152,6 +155,18 @@ Resources:
               commands:
                 - echo Building python package...
                 - python setup.py sdist bdist_wheel
+            post_build:
+              commands:
+                - echo Publishing python package...
+                - export REPO_NAME="paiv230806-test"
+                - REPO_URL=$(aws codeartifact get-repository-endpoint --domain $CODEARTIFACT_DOMAIN --domain-owner 264896465647 --repository $CODEARTIFACT_REPO --format pypi --query repositoryEndpoint --output text)
+                - export USERNAME="aws"
+                - PASSWORD=$(aws codeartifact get-authorization-token --domain $CODEARTIFACT_DOMAIN --domain-owner 264896465647 --query authorizationToken --output text)
+                - if [ ! -f ~/.pypirc ]; then touch ~/.pypirc; fi
+                - |
+                  printf "[distutils]\nindex-servers =\n    %s\n\n[%s]\nrepository: %s\nusername: %s\npassword: %s" "$REPO_NAME" "$REPO_NAME" "$REPO_URL" "$USERNAME" "$PASSWORD" > ~/.pypirc
+                - cat /root/.pypirc
+                - twine upload --repository $CODEARTIFACT_REPO dist/*
       Triggers:
         Webhook: true
         FilterGroups:
@@ -302,7 +317,7 @@ Resources:
               OutputArtifacts: []
               InputArtifacts:
                 - Name: SourceCode
-              RunOrder: 1
+              RunOrder: 2
         - Name: Package
           Actions:
             - Name: Package
@@ -316,5 +331,5 @@ Resources:
               OutputArtifacts: []
               InputArtifacts:
                 - Name: SourceCode
-              RunOrder: 1
+              RunOrder: 3
             
