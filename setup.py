@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='iris',  # Replace with your package's name
-    version='0.1.0',  # Replace with your package's version
+    version='0.1.1',  # Replace with your package's version
     author='xxxx',  # Replace with your name
     author_email='your.email@example.com',  # Replace with your email
     description='A short description of the package',  # Replace with a short description of what your package does

@@ -317,7 +317,7 @@ Resources:
               OutputArtifacts: []
               InputArtifacts:
                 - Name: SourceCode
-              RunOrder: 1
+              RunOrder: 2
         - Name: Package
           Actions:
             - Name: Package
@@ -331,5 +331,5 @@ Resources:
               OutputArtifacts: []
               InputArtifacts:
                 - Name: SourceCode
-              RunOrder: 1
+              RunOrder: 3
             
