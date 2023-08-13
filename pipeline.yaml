@@ -100,6 +100,10 @@ Resources:
         Webhook: true
         FilterGroups:
           - - Type: EVENT
+              Pattern: PUSH
+            - Type: HEAD_REF
+              Pattern: !Sub '^refs/heads/${GitHubBranch}$'
+          - - Type: EVENT
               Pattern: >-
                 PULL_REQUEST_CREATED, PULL_REQUEST_UPDATED,
                 PULL_REQUEST_REOPENED
@@ -137,6 +141,10 @@ Resources:
       Triggers:
         Webhook: true
         FilterGroups:
+          - - Type: EVENT
+              Pattern: PUSH
+            - Type: HEAD_REF
+              Pattern: !Sub '^refs/heads/${GitHubBranch}$'
           - - Type: EVENT
               Pattern: >-
                 PULL_REQUEST_CREATED, PULL_REQUEST_UPDATED,
