@@ -73,6 +73,7 @@ Resources:
                   - 'codeartifact:GetPackageVersion'
                   - 'codeartifact:PublishPackageVersion'
                   - 'codeartifact:PutPackageVersion'
+                  - 'codeartifact:GetServiceBearerToken'
                 Resource: '*'
   
   CloudBuildSourceCredential:
