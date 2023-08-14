@@ -73,9 +73,15 @@ Resources:
                   - 'codeartifact:GetPackageVersion'
                   - 'codeartifact:PublishPackageVersion'
                   - 'codeartifact:PutPackageVersion'
-                  - 'codeartifact:GetServiceBearerToken'
                 Resource: '*'
-  
+        - PolicyName: 'GetServiceBearerTokenPermission'
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: 'Allow'
+                Action: 
+                  - 'sts:GetServiceBearerToken'
+                Resource: '*'
   CloudBuildSourceCredential:
     Type: 'AWS::CodeBuild::SourceCredential'
     Properties:
