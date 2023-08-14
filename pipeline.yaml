@@ -145,12 +145,6 @@ Resources:
               Pattern: PUSH
             - Type: HEAD_REF
               Pattern: !Sub '^refs/heads/${GitHubBranch}$'
-          - - Type: EVENT
-              Pattern: >-
-                PULL_REQUEST_CREATED, PULL_REQUEST_UPDATED,
-                PULL_REQUEST_REOPENED
-            - Type: BASE_REF
-              Pattern: !Sub '^refs/heads/${GitHubBranch}$'
       ServiceRole: !GetAtt CloudBuildServiceRole.Arn
 
   CloudPipelineServiceRole:
