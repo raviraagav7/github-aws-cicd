@@ -1,0 +1,96 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Resources:
+
+  MyEC2InstanceRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - ec2.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Path: "/"
+
+  MyEC2InstanceProfile:
+    Type: 'AWS::IAM::InstanceProfile'
+    Properties:
+      Path: "/"
+      Roles:
+        - Ref: MyEC2InstanceRole
+
+  MyEC2InstancePolicy:
+    Type: 'AWS::IAM::Policy'
+    Properties:
+      PolicyName: 'EC2S3AccessPolicy'
+      Roles:
+        - Ref: MyEC2InstanceRole
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Action:
+              - s3:*
+            Resource: 
+              - Fn::Sub: arn:aws:s3:::${MyS3Bucket}/*
+              - Fn::GetAtt:
+                - MyS3Bucket
+                - Arn
+
+  MyEC2Instance:
+    Type: 'AWS::EC2::Instance'
+    Properties:
+      InstanceType: t2.micro
+      KeyName: YourKeyNameHere # Please replace with your key name
+      ImageId: ami-xxxxxxxxxxxxx # Please replace with your desired AMI ID
+      SubnetId: subnet-xxxxxxxxxxxxx # Please replace with your subnet ID
+      IamInstanceProfile:
+        Ref: MyEC2InstanceProfile
+  
+  MyECRRepository:
+    Type: 'AWS::ECR::Repository'
+    Properties:
+      RepositoryName: my-ecr-repo
+      LifecyclePolicy:
+        LifecyclePolicyText: |
+          {
+            "rules": [
+              {
+                "rulePriority": 1,
+                "description": "Expire images older than 30 days",
+                "selection": {
+                  "tagStatus": "untagged",
+                  "countType": "sinceImagePushed",
+                  "countUnit": "days",
+                  "countNumber": 30
+                },
+                "action": {
+                  "type": "expire"
+                }
+              }
+            ]
+          }
+
+  MyS3Bucket:
+    Type: 'AWS::S3::Bucket'
+    Properties:
+      BucketName: my-s3-bucket-for-ec2 # Optional, remove this if you want AWS to generate a unique name
+
+Outputs:
+  EC2InstanceID:
+    Description: EC2 Instance ID
+    Value: 
+      Ref: MyEC2Instance
+  ECRRepositoryURL:
+    Description: ECR Repository URL
+    Value: 
+      Fn::GetAtt: 
+        - MyECRRepository
+        - RepositoryUri
+  S3BucketName:
+    Description: Name of the S3 bucket
+    Value:
+      Ref: MyS3Bucket
